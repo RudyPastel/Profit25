@@ -1,16 +1,28 @@
 sousou <-function(mise = 4000, cout_part = 25,nbr_cycle = 4, salaire_part = .1*cout_part,
-                  derniereSemaineDeReinvestissement = 14){
+                  derniereSemaineDeReinvestissement = 14,
+                  benefice_initial = NULL,
+                  age_part_initial = NULL,
+                  duree_cycle = 14){
   #### Durée du jeu
-  nbr_semaine = nbr_cycle * 14
+  nbr_semaine = nbr_cycle * duree_cycle
+  duree_cycle = duree_cycle -1 #Because of  the week 0
   if(is.null(derniereSemaineDeReinvestissement)){derniereSemaineDeReinvestissement = nbr_semaine}
   
   #### DEBUT DU JEU: debut de la semaine 1
+  # Benefice déjà engrangés au début de la semaine 1
+  if(is.null(benefice_initial)){benefice_initial=0}
+  #Age des parts au début de la première semaine de jeu
+  if(is.null(age_part_initial) || length(age_part_initial)<duree_cycle){
+    age_part_initial = rep(0,duree_cycle)
+  } else {
+    age_part_initial = ifelse(test = is.na(age_part_initial),yes = 0,no = age_part_initial)
+  }
   # Premiere semaine
   semaine = 1
   Argent = data.frame(
     semaine = semaine,
     portemonnaie = 0,
-    benefice = -mise,
+    benefice = -mise+benefice_initial,
     retrait = 0,
     revenu = 0 )
   
@@ -18,8 +30,8 @@ sousou <-function(mise = 4000, cout_part = 25,nbr_cycle = 4, salaire_part = .1*c
     semaine = semaine,
     age_0 = mise %/% cout_part # Parts achetees en debut de semaine
   )
-  for(age in 1:13){
-    Part[semaine,paste0("age_",age)] = 0
+  for(age in 1:duree_cycle){
+    Part[semaine,paste0("age_",age)] = age_part_initial[age]
   }
   Part[semaine,"nombreDePart"] = Part[semaine,"age_0"]
   Part[semaine,"revenuFinDeSemaine"] = Part[semaine,"nombreDePart"] * salaire_part
@@ -38,10 +50,10 @@ sousou <-function(mise = 4000, cout_part = 25,nbr_cycle = 4, salaire_part = .1*c
     # Revenu au debut de la semaine: Salaire des clics la semaine precedente
     #et remboursement des parts achetees il y a 14 semaines.
     Argent[semaine,"revenu"] = 
-      sum(Part[semaine-1,paste0("age_",0:13)]) * salaire_part 
+      sum(Part[semaine-1,paste0("age_",0:duree_cycle)]) * salaire_part 
     # Les parts mises en jeu viellissent d'une semaine, les parts vielles de
     # 14 semaines sont retirees du jeu.
-    Part[semaine,paste0("age_",1:13)] = Part[semaine-1,paste0("age_",0:12)]
+    Part[semaine,paste0("age_",1:duree_cycle)] = Part[semaine-1,paste0("age_",seq(0,duree_cycle-1))]
     
     # Le revenu  et le portemonaie sont investis dans autant de nouvelles parts 
     #que possible
@@ -58,7 +70,7 @@ sousou <-function(mise = 4000, cout_part = 25,nbr_cycle = 4, salaire_part = .1*c
     Argent[semaine,"benefice"] = Argent[semaine-1,"benefice"]
 
     # Prévision pour la fin de semain
-    Part[semaine,"nombreDePart"] = sum(Part[semaine,paste0("age_",0:13)])
+    Part[semaine,"nombreDePart"] = sum(Part[semaine,paste0("age_",0:duree_cycle)])
     Part[semaine,"revenuFinDeSemaine"] = Part[semaine,"nombreDePart"] * salaire_part
   }
   
@@ -75,10 +87,10 @@ sousou <-function(mise = 4000, cout_part = 25,nbr_cycle = 4, salaire_part = .1*c
     # Revenu au debut de la semaine: Salaire des clics la semaine precedente
     #et remboursement des parts achetees il y a 14 semaines.
     Argent[semaine,"revenu"] = 
-      sum(Part[semaine-1,paste0("age_",0:13)]) * salaire_part 
+      sum(Part[semaine-1,paste0("age_",0:duree_cycle)]) * salaire_part 
     # Les parts mises en jeu viellissent d'une semaine, les parts vielles de
     # 14 semaines sont retirees du jeu.
-    Part[semaine,paste0("age_",1:13)] = Part[semaine-1,paste0("age_",0:12)]
+    Part[semaine,paste0("age_",1:duree_cycle)] = Part[semaine-1,paste0("age_",0:12)]
     
     # Aucune nouvelle part n'est achetée
     Part[semaine,"age_0"] = 0
@@ -92,7 +104,7 @@ sousou <-function(mise = 4000, cout_part = 25,nbr_cycle = 4, salaire_part = .1*c
     Argent[semaine,"benefice"] = Argent[semaine-1,"benefice"] + Argent[semaine,"retrait"] 
     
     # Prévision pour la fin de semain
-    Part[semaine,"nombreDePart"] = sum(Part[semaine,paste0("age_",0:13)])
+    Part[semaine,"nombreDePart"] = sum(Part[semaine,paste0("age_",0:duree_cycle)])
     Part[semaine,"revenuFinDeSemaine"] = Part[semaine,"nombreDePart"] * salaire_part
   }
   return(list(Argent = Argent,Part = Part))

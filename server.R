@@ -9,7 +9,7 @@ shinyServer(function(input, output) {
     sliderInput("lastInvestmentWeek",
                 "Dernière semaine d'investissement",
                 min = 1,
-                max = 14*input$nbr_cycle,
+                max = input$duree_cycle*input$nbr_cycle,
                 value = 15) 
   })
   # The input is used to run the simulation
@@ -18,7 +18,9 @@ shinyServer(function(input, output) {
            cout_part = input$cout_part,
            nbr_cycle = input$nbr_cycle,
            salaire_part = input$salaire_part,
-           derniereSemaineDeReinvestissement = input$lastInvestmentWeek)
+           derniereSemaineDeReinvestissement = input$lastInvestmentWeek,
+           benefice_initial = input$benefice_initial,
+           age_part_initial = age_part_initial())
   })
   # Plot le revenu en début de semaine
   output$revenu <- renderChart(expr = {
@@ -91,6 +93,22 @@ shinyServer(function(input, output) {
   # The table of the age of all parts
   output$PartTable <- renderDataTable(expr = {
     info()$Part
+  })
+  
+  # Number of parts of a given age at the beginning of the game
+  output[["age_part_initial"]] <- renderUI({
+    info = lapply(seq(input$duree_cycle-1), function(i) {
+      numericInput(inputId = paste0("age_",i),
+                   label = h3(paste("Nombre de parts d'âge",i)),
+                   value = 0)
+    })
+    info = split(info,seq(0,input$duree_cycle-2) %/% ceiling((input$duree_cycle-1)/3))
+    fluidRow(lapply(info,column,width=4))
+  })
+  age_part_initial <- reactive({
+    info = c()
+    for(i in seq(input$duree_cycle-1)){info = c(info,input[[paste0("age_",i)]])}
+    return(info)
   })
 })
 

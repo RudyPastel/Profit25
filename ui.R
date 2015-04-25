@@ -11,10 +11,11 @@ shinyUI(fluidPage(
   # Sidebar with a slider input for the number of bins
   sidebarLayout(
     sidebarPanel(width = 2,
-      h1("Entrer les informations"),
       numericInput("mise", label = h3("Mise initiale"), value = 4000),
+      numericInput("benefice_initial", label = h3("Bénéfice initial"), value = 0),
       numericInput("cout_part", label = h3("Coût d'une part"), value = 25),
       numericInput("salaire_part", label = h3("Salaire d'une part"), value = 2.5),
+      numericInput("duree_cycle", label = h3("Durée d'un cycle"), value = 14),
       sliderInput("nbr_cycle",
                   "Nombre de cycles joués",
                   min = 1,
@@ -32,6 +33,9 @@ shinyUI(fluidPage(
                  fluidRow(column(width = 6,showOutput("retrait", "highcharts")),
                           column(width = 6,showOutput("benefice", "highcharts")))
                  ),
+        tabPanel("Situation initiale",
+                 uiOutput("age_part_initial")
+        ),
         tabPanel("Nombre de parts d'un âge donné en début de semaine", dataTableOutput("PartTable"))
       )
     )
